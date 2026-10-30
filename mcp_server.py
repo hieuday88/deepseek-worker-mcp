@@ -64,11 +64,12 @@ def strip_fence(text):
 
 
 def build_prompt(args):
-    """Combine the prompt with the contents of any context files."""
-    parts = [args["prompt"]]
+    """Put context files first and the task last, so jobs sharing files share a cacheable prefix."""
+    parts = []
     for path in args.get("context_files") or []:
         with open(path, encoding="utf-8") as f:
-            parts.append(f"\n--- {path} ---\n{f.read()}")
+            parts.append(f"--- {path} ---\n{f.read()}\n")
+    parts.append(f"--- task ---\n{args['prompt']}" if parts else args["prompt"])
     return "\n".join(parts)
 
 
@@ -97,7 +98,8 @@ def usage_note(data):
     """Summarize token use and cost from the gateway's usage block."""
     u = data.get("usage") or {}
     cost = (u.get("opencode") or {}).get("allowance", u.get("cost"))
-    note = f"in {u.get('prompt_tokens', 0)} / out {u.get('completion_tokens', 0)} tok"
+    cached = (u.get("prompt_tokens_details") or {}).get("cached_tokens")
+    note = f"in {u.get('prompt_tokens', 0)}{f', {cached} cached' if cached else ''} / out {u.get('completion_tokens', 0)} tok"
     return f" ({note}, ${cost:.5f})" if isinstance(cost, (int, float)) else f" ({note})"
 
 
@@ -177,7 +179,7 @@ def handle(msg):
         result = {
             "protocolVersion": msg.get("params", {}).get("protocolVersion", "2025-06-18"),
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "deepseek-worker", "version": "1.5.0"},
+            "serverInfo": {"name": "deepseek-worker", "version": "1.6.0"},
             "instructions": INSTRUCTIONS,
         }
     elif method == "tools/list":

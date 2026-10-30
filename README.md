@@ -7,7 +7,8 @@ A single-file MCP server that lets Claude Code hand bulk, mechanical generation 
 - Feeds existing files to the worker (`context_files`), so Claude never pastes code into the prompt.
 - Runs several workers at once: pass independent tasks as `jobs` in one call. (Claude Code sends separate tool calls one after another, so parallelism has to happen inside a single call.) There is no concurrency cap: the Go gateway handled 24 realistic jobs and 128 tiny requests at once without a single rate-limit error.
 - Retries rate limits (429), gateway errors (5xx) and connection failures twice, after 2 s and 6 s.
-- Every result ends with token use and cost, e.g. `(in 1200 / out 9800 tok, $0.00420)`.
+- Every result ends with token use and cost, e.g. `(in 2504, 2432 cached / out 16 tok, $0.00003)`.
+- Prompt-cache friendly: `context_files` go first and the task last, so later calls over the same files reuse the cached prefix. Measured: about 97% of the prompt cached and ~16x cheaper on the second call. (Jobs in one batch start together, so the cache helps from the next call on.)
 - Reasoning is disabled and the output cap is 64k tokens: the worker only does mechanical work, so this is the cheapest and fastest setting.
 
 ## Requirements
