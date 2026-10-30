@@ -5,6 +5,9 @@ A single-file MCP server that lets Claude Code hand bulk, mechanical generation 
 - One file, Python standard library only, no pip packages.
 - Writes output straight to disk (`out_file`), so Claude reads and fixes it instead of retyping it.
 - Feeds existing files to the worker (`context_files`), so Claude never pastes code into the prompt.
+- Runs several workers at once: pass independent tasks as `jobs` in one call. (Claude Code sends separate tool calls one after another, so parallelism has to happen inside a single call.) There is no concurrency cap: the Go gateway handled 24 realistic jobs and 128 tiny requests at once without a single rate-limit error.
+- Retries rate limits (429), gateway errors (5xx) and connection failures twice, after 2 s and 6 s.
+- Every result ends with token use and cost, e.g. `(in 1200 / out 9800 tok, $0.00420)`.
 - Reasoning is disabled and the output cap is 64k tokens: the worker only does mechanical work, so this is the cheapest and fastest setting.
 
 ## Requirements
@@ -46,6 +49,7 @@ To turn it off, disconnect the server, or remove it with `claude mcp remove deep
 | `out_file` | Write the reply here (one wrapping code fence stripped); returns only `WROTE <path> (<n> lines)`. |
 | `force` | Allow overwriting an existing `out_file`. |
 | `max_tokens` | Output cap, default 64000. |
+| `jobs` | Instead of the fields above: a list of jobs, each with its own `prompt`, `context_files`, `out_file`, `force`, `max_tokens`. They run in parallel and the reply lists one result per job (`[1] ...`, `[2] ...`). |
 
 The server also sends Claude short usage instructions: use it for long mechanical output, never retype its output, and always verify it, because the worker is a cheap model that makes real mistakes.
 
