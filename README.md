@@ -52,7 +52,7 @@ To turn it off, disconnect the server, or remove it with `claude mcp remove deep
 | `max_tokens` | Output cap, default 64000. |
 | `jobs` | Instead of the fields above: a list of jobs, each with its own `prompt`, `context_files`, `out_file`, `force`, `max_tokens`. They run in parallel and the reply lists one result per job (`[1] ...`, `[2] ...`). |
 
-The server also sends Claude short usage instructions: use it for long mechanical output, never retype its output, and always verify it, because the worker is a cheap model that makes real mistakes.
+The server also sends Claude short usage instructions: use it whenever the output would be long (~50+ lines of code or ~300+ words), including rewriting document sections and scripts or HTML that generate .docx/.xlsx files; decide first, let it write; keep small edits for itself; never retype its output, and always verify it, because the worker is a cheap model that makes real mistakes.
 
 ## How it calls OpenCode Go
 

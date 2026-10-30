@@ -24,8 +24,11 @@ RETRY_CODES = {429, 500, 502, 503, 504}
 RETRY_DELAYS = [2, 6]
 
 INSTRUCTIONS = (
-    "Use `deepseek` unprompted for long mechanical output (many similar files, tests, sample data, "
-    "boilerplate, conversions). Not for small edits or code needing codebase search. "
+    "Use `deepseek` unprompted whenever you'd write long output (~50+ lines of code or ~300+ words): "
+    "bulk files, tests, data, drafting or rewriting documents/sections, and document generators "
+    "(HTML/script that builds a .docx, .xlsx, etc.; the content inside counts as long output). "
+    "Make the decisions yourself first and put them in `prompt`; it writes, you check. "
+    "Do small, scattered edits and short code yourself. "
     "It sees only `prompt` + `context_files`: pass existing code as context_files, never pasted. "
     "Use out_file, then Read and fix with Edit; never retype its output (in files or messages). "
     "Its output is an unverified draft: check it and run tests. "
@@ -179,7 +182,7 @@ def handle(msg):
         result = {
             "protocolVersion": msg.get("params", {}).get("protocolVersion", "2025-06-18"),
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "deepseek-worker", "version": "1.6.0"},
+            "serverInfo": {"name": "deepseek-worker", "version": "1.6.1"},
             "instructions": INSTRUCTIONS,
         }
     elif method == "tools/list":
